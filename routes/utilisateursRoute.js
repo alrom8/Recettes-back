@@ -2,9 +2,16 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const {verifierUtilisateur} = require("../middlewares/auth.middleware")
 require("../modeles/utilisateurModele");
 
 let utilisateurModele = mongoose.model("Utilisateur");
+
+router.get("/deconnexion", (req, res) => {
+  res.cookie("jwt", "", {maxAge:1});
+  res.redirect("/");
+});
 
 router.get("/", (req, res) => {
   utilisateurModele
@@ -19,6 +26,10 @@ router.get("/:id", (req, res) => {
     .then((utilisateur) => res.status(200).send(utilisateur))
     .catch(() => res.sendStatus(400));
 });
+
+/*router.get("/deconnexion", (req, res) => {
+  res.send("okedz")
+});*/
 
 router.put("/:id", (req, res) => {
   utilisateurModele
@@ -49,21 +60,29 @@ router.post("/connexion", (req, res) => {
     .find({ pseudo: req.body.pseudo })
     .then((utilisateurs) => {
       if (utilisateurs.length == 0) {
-        res.status(401).send("Pseudo ou mot de passe incorrect");
+        res.status(400).send("Pseudo ou mot de passe incorrect");
       }
       for (utilisateur of utilisateurs) {
         bcrypt
           .compare(req.body.mdp, utilisateur.mdp)
           .then((estValide) => {
             if (estValide) {
-              res.status(200).json({ token: "TOK" });
+              res.cookie(
+                "jwt",
+                jwt.sign({ idUtilisateur: utilisateur.id }, "aaaaabnnnn", {
+                  expiresIn: "24h",
+                })
+              );
+              res.status(200).send(utilisateur.id);
             }
-            res.status(401).send("Pseudo ou mot de passe incorrect");
+            res.status(400).send("Pseudo ou mot de passe incorrect");
           })
-          .catch((err) => res.status(401).json(err));
+          .catch((err) => res.status(400).json(err));
       }
     })
-    .catch((err) => res.status(401).json(err));
+    .catch((err) => res.status(400).json(err));
 });
+
+
 
 module.exports = router;
