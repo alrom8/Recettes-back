@@ -3,14 +3,15 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const {verifierUtilisateur} = require("../middlewares/auth.middleware")
+const { verifierUtilisateur } = require("../middlewares/auth.middleware");
 require("../modeles/utilisateurModele");
 
 let utilisateurModele = mongoose.model("Utilisateur");
 
+//pour une raison inconnue, cette route doit figurer avant la route "connexion" pour fonctionner
 router.get("/deconnexion", (req, res) => {
-  res.cookie("jwt", "", {maxAge:1});
-  res.redirect("/");
+  res.cookie("jwt", "", { maxAge: 1 }); //maxAge = durée après laquelle le token est détruit
+  res.redirect("/"); // la requête n'aboutit pas sans cette ligne
 });
 
 router.get("/", (req, res) => {
@@ -26,10 +27,6 @@ router.get("/:id", (req, res) => {
     .then((utilisateur) => res.status(200).send(utilisateur))
     .catch(() => res.sendStatus(400));
 });
-
-/*router.get("/deconnexion", (req, res) => {
-  res.send("okedz")
-});*/
 
 router.put("/:id", (req, res) => {
   utilisateurModele
@@ -71,9 +68,10 @@ router.post("/connexion", (req, res) => {
                 "jwt",
                 jwt.sign({ idUtilisateur: utilisateur.id }, "aaaaabnnnn", {
                   expiresIn: "24h",
-                })
+                }),
+                { httpOnly: true }
               );
-              res.status(200).send(utilisateur.id);
+              res.status(200).send(utilisateur.pseudo);
             }
             res.status(400).send("Pseudo ou mot de passe incorrect");
           })
@@ -82,7 +80,5 @@ router.post("/connexion", (req, res) => {
     })
     .catch((err) => res.status(400).json(err));
 });
-
-
 
 module.exports = router;

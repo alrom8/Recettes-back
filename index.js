@@ -2,8 +2,8 @@ const PORT = 80;
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser")
-const {verifierUtilisateur} = require("./middlewares/auth.middleware")
+const cookieParser = require("cookie-parser") //permet la lecture des cookies
+const {verifierUtilisateur} = require("./middlewares/auth.middleware") //le middleware permettant la vérification des utilisateurs (via un token)
 require("./modeles/dbConfig");
 const recettesRoute = require("./routes/recettesRoute");
 const utilisateursRoute = require("./routes/utilisateursRoute");
@@ -24,7 +24,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("*", verifierUtilisateur)
+app.get("*/utilisateurs", verifierUtilisateur) //le middleware s'enclenche pour chaque route utilisateur
 
 app.use("/api/recettes", recettesRoute);
 app.use("/api/utilisateurs", utilisateursRoute);
